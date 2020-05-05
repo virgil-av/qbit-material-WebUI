@@ -1,73 +1,66 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { CookieService } from 'ngx-cookie-service';
-import { GetCookieInfo } from '../../utils/ClientInfo';
-import { MainData, Torrent, NetworkConnection } from '../../utils/Interfaces';
-
-
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {CookieService} from 'ngx-cookie-service';
+import {GetCookieInfo} from '../../utils/ClientInfo';
+import {MainData, NetworkConnection, Torrent} from '../../utils/Interfaces';
 // UI Components
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource, MatTable } from '@angular/material/table';
-import { MatSpinner } from '@angular/material/progress-spinner';
-import { ProgressBarMode } from '@angular/material/progress-bar';
-
+import {MatSort} from '@angular/material/sort';
+import {MatTableDataSource} from '@angular/material/table';
 // Helpers
-import * as http_endpoints from '../../assets/http_config.json';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { DeleteTorrentDialogComponent } from '../delete-torrent-dialog/delete-torrent-dialog.component';
-import { TorrentSearchServiceService } from '../services/torrent-search-service.service';
-import { TorrentDataStoreService } from '../services/torrent-management/torrent-data-store.service';
-import { PrettyPrintTorrentDataService } from '../services/pretty-print-torrent-data.service';
-import { BulkUpdateTorrentsComponent } from './bulk-update-torrents/bulk-update-torrents.component';
-import { SelectionModel } from '@angular/cdk/collections';
-import { RowSelectionService } from '../services/torrent-management/row-selection.service';
-import { TorrentInfoDialogComponent } from '../torrent-info-dialog/torrent-info-dialog.component';
-import { NetworkConnectionInformationService } from '../services/network/network-connection-information.service';
-import { ThemeService } from '../services/theme.service';
-import { Observable } from 'rxjs';
-import { GetTorrentSearchName } from 'src/utils/Helpers';
+import {MatDialog, MatDialogRef} from '@angular/material/dialog';
+import {DeleteTorrentDialogComponent} from '../delete-torrent-dialog/delete-torrent-dialog.component';
+import {TorrentSearchServiceService} from '../services/torrent-search-service.service';
+import {TorrentDataStoreService} from '../services/torrent-management/torrent-data-store.service';
+import {PrettyPrintTorrentDataService} from '../services/pretty-print-torrent-data.service';
+import {SelectionModel} from '@angular/cdk/collections';
+import {RowSelectionService} from '../services/torrent-management/row-selection.service';
+import {TorrentInfoDialogComponent} from '../torrent-info-dialog/torrent-info-dialog.component';
+import {NetworkConnectionInformationService} from '../services/network/network-connection-information.service';
+import {ThemeService} from '../services/theme.service';
+import {Observable} from 'rxjs';
+import {GetTorrentSearchName} from 'src/utils/Helpers';
 
 @Component({
   selector: 'app-torrents-table',
   templateUrl: './torrents-table.component.html',
   styleUrls: ['./torrents-table.component.css']
 })
-export class TorrentsTableComponent implements OnInit {
+export class TorrentsTableComponent implements OnInit, OnDestroy {
   public allTorrentInformation: MainData;
-  public allTorrentData : Torrent[];
+  public allTorrentData: Torrent[];
   public filteredTorrentData: Torrent[];
   public cookieValueSID: string;
   public isDarkTheme: Observable<boolean>;
   selection = new SelectionModel<Torrent>(true, []);
 
   // UI Components
-  public tableColumns: string[] = ["select", "Actions", "Name", "Size", "Progress", "Status", "Down_Speed", "Up_Speed", "ETA", "Completed_On"];
+  public tableColumns: string[] = ['select', 'Actions', 'Name', 'Size', 'Progress', 'Status', 'Down_Speed', 'Up_Speed', 'ETA', 'Completed_On'];
   public dataSource = new MatTableDataSource(this.filteredTorrentData ? this.filteredTorrentData : []);
-
+  @ViewChild(MatSort, {static: true}) sort: MatSort;
   // Other
   private DEFAULT_REFRESH_TIMEOUT: number;
   private REFRESH_INTERVAL: any = null;
-  private isFetchingData: boolean = false;
+  private isFetchingData = false;
   private RID = 0;
   private deleteTorDialogRef: MatDialogRef<DeleteTorrentDialogComponent, any>;
   private infoTorDialogRef: MatDialogRef<TorrentInfoDialogComponent, any>;
-  private currentMatSort = {active: "Completed_On", direction: "desc"};
-  private torrentSearchValue = "";
+  private currentMatSort = {active: 'Completed_On', direction: 'desc'};
+  private torrentSearchValue = '';
   private torrentsSelected: Torrent[] = [];     // Keep track of which torrents are currently selected
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
 
   constructor(private cookieService: CookieService, private data_store: TorrentDataStoreService,
               private pp: PrettyPrintTorrentDataService, public deleteTorrentDialog: MatDialog, private infoTorDialog: MatDialog,
               private torrentSearchService: TorrentSearchServiceService, private torrentsSelectedService: RowSelectionService,
-              private networkInfo: NetworkConnectionInformationService, private theme: ThemeService) { }
+              private networkInfo: NetworkConnectionInformationService, private theme: ThemeService) {
+  }
 
   ngOnInit(): void {
 
     // Subscribe to torrent searching service
     this.torrentSearchService.getSearchValue().subscribe((res: string) => {
       this.updateTorrentSearchValue(res);
-    })
+    });
 
-    let cookieInfo = GetCookieInfo()
+    const cookieInfo = GetCookieInfo();
     this.cookieValueSID = this.cookieService.get(cookieInfo.SIDKey);
 
     this.dataSource.sort = this.sort;
@@ -82,16 +75,16 @@ export class TorrentsTableComponent implements OnInit {
 
     // When the user's network status changes, update it in state
     this.networkInfo.get_network_change_subscription().subscribe((update: NetworkConnection) => {
-      this.DEFAULT_REFRESH_TIMEOUT = this.networkInfo.get_recommended_torrent_refresh_interval()
+      this.DEFAULT_REFRESH_TIMEOUT = this.networkInfo.get_recommended_torrent_refresh_interval();
       this.SetTorrentRefreshInterval();
-      console.log("updated interval", this.DEFAULT_REFRESH_TIMEOUT);
+      console.log('updated interval', this.DEFAULT_REFRESH_TIMEOUT);
     });
 
     // Which torrents are selected
     this.torrentsSelectedService.getTorrentsSelected().subscribe(res => {
 
       // If empty, clear selection
-      if(res.length === 0) {
+      if (res.length === 0) {
         this.selection.clear();
       }
     });
@@ -122,7 +115,7 @@ export class TorrentsTableComponent implements OnInit {
   }
 
   isTorrentPaused(tor: Torrent): boolean {
-    return tor.state === "pausedDL" || tor.state === "pausedUP";
+    return tor.state === 'pausedDL' || tor.state === 'pausedUP';
   }
 
   getFileSizeString(size: number): string {
@@ -141,56 +134,22 @@ export class TorrentsTableComponent implements OnInit {
     return this.pp.pretty_print_completed_on(timestamp);
   }
 
-  /** Get all torrent data and update the table */
-  private async getTorrentData(): Promise<void>{
-
-    // Don't request if we're already in the middle of one
-    if(this.isFetchingData){
-      return;
-    }
-
-    this.isFetchingData = true;
-    let data = await this.data_store.GetTorrentData(this.RID);
-
-    // Update state with fresh torrent data
-    this.allTorrentInformation = data;
-    this.allTorrentData = data.torrents;
-    this.filteredTorrentData = data.torrents;
-    this.isFetchingData = false;
-    this.RID += 1;
-
-    // Re-sort data
-    this.onMatSortChange(this.currentMatSort);
-
-    // Filter by any search criteria
-    this.updateTorrentsBasedOnSearchValue();
-  }
-
-  private updateTorrentSearchValue(val: string): void {
-    val = val || "";  // In case null is given
-    this.torrentSearchValue = GetTorrentSearchName(val);
-
-    // User is searching for something
-    this.updateTorrentsBasedOnSearchValue()
-  }
-
   /** Callback for when user is searching for a torrent. Filter all torrents displayed that match torrent criteria
    *
    * NOTE: If search value in state is empty, no filtering is done
-  */
+   */
   updateTorrentsBasedOnSearchValue(): void {
 
     // If a search value is given, then do the work
-    if(this.allTorrentData && this.torrentSearchValue) {
+    if (this.allTorrentData && this.torrentSearchValue) {
       this.filteredTorrentData = this.allTorrentData
-      .filter((tor: Torrent) => {
-        return GetTorrentSearchName(tor.name).includes(this.torrentSearchValue);
-      });
+        .filter((tor: Torrent) => {
+          return GetTorrentSearchName(tor.name).includes(this.torrentSearchValue);
+        });
 
       this.refreshDataSource();
-    }
-    else if(this.torrentSearchValue === "") {   // If searching for value is empty, restore filteredTorrentData
-      this.filteredTorrentData = this.allTorrentData
+    } else if (this.torrentSearchValue === '') {   // If searching for value is empty, restore filteredTorrentData
+      this.filteredTorrentData = this.allTorrentData;
     }
   }
 
@@ -198,34 +157,41 @@ export class TorrentsTableComponent implements OnInit {
    * @param tor The torrents in question.
    */
   pauseTorrentsBulk(tor: Torrent[]) {
-    this.data_store.PauseTorrents(tor).subscribe(res => { });
+    this.data_store.PauseTorrents(tor).subscribe(res => {
+    });
   }
 
   /** Resume given array of torrents
    * @param tor The torrents in question
    */
   resumeTorrentsBulk(tor: Torrent[]) {
-    this.data_store.ResumeTorrents(tor).subscribe(res => { });
+    this.data_store.ResumeTorrents(tor).subscribe(res => {
+    });
   }
 
   forceStartTorrentsBulk(tor: Torrent[]) {
-    this.data_store.ForceStartTorrents(tor).subscribe(res => { });
+    this.data_store.ForceStartTorrents(tor).subscribe(res => {
+    });
   }
 
   increasePriorityBulk(tor: Torrent[]) {
-    this.data_store.IncreaseTorrentPriority(tor).subscribe(res => { });
+    this.data_store.IncreaseTorrentPriority(tor).subscribe(res => {
+    });
   }
 
   decreasePriorityBulk(tor: Torrent[]) {
-    this.data_store.DecreaseTorrentPriority(tor).subscribe(res => { })
+    this.data_store.DecreaseTorrentPriority(tor).subscribe(res => {
+    });
   }
 
   maximumPriorityBulk(tor: Torrent[]) {
-    this.data_store.AssignTopPriority(tor).subscribe(res => { });
+    this.data_store.AssignTopPriority(tor).subscribe(res => {
+    });
   }
 
   minimumPriorityBulk(tor: Torrent[]) {
-    this.data_store.AssignLowestPriority(tor).subscribe(res => { });
+    this.data_store.AssignLowestPriority(tor).subscribe(res => {
+    });
   }
 
   /** Callback for when a torrent is selected in the table. Update row selection service with new data
@@ -242,25 +208,40 @@ export class TorrentsTableComponent implements OnInit {
 
   /** Open the modal for deleting a new torrent */
   openDeleteTorrentDialog(event: any, tors: Torrent[]): void {
-    if(event) { event.stopPropagation() };
+    if (event) {
+      event.stopPropagation();
+    }
 
-    this.deleteTorDialogRef = this.deleteTorrentDialog.open(DeleteTorrentDialogComponent, {disableClose: true, data: {torrent: tors}, panelClass: "generic-dialog"});
+
+    this.deleteTorDialogRef = this.deleteTorrentDialog.open(DeleteTorrentDialogComponent, {
+      disableClose: true,
+      data: {torrent: tors},
+      panelClass: 'generic-dialog'
+    });
 
     this.deleteTorDialogRef.afterClosed().subscribe((result: any) => {
       console.log(result);
-      if (result.attemptedDelete) { this.torrentDeleteFinishCallback() }
+      if (result.attemptedDelete) {
+        this.torrentDeleteFinishCallback();
+      }
     });
   }
 
   /** Open modal for viewing details torrent information */
   openInfoTorrentDialog(event: any, tor: Torrent): void {
-    if(event) { event.stopPropagation(); }
+    if (event) {
+      event.stopPropagation();
+    }
 
-    this.infoTorDialogRef = this.infoTorDialog.open(TorrentInfoDialogComponent, {data: {torrent: tor}, autoFocus: false, panelClass: "generic-dialog"})
+    this.infoTorDialogRef = this.infoTorDialog.open(TorrentInfoDialogComponent, {
+      data: {torrent: tor},
+      autoFocus: false,
+      panelClass: 'generic-dialog'
+    });
 
     this.infoTorDialogRef.afterClosed().subscribe((result: any) => {
-      console.log("Closed info modal", result);
-    })
+      console.log('Closed info modal', result);
+    });
   }
 
   public handleBulkEditChange(result?: string): void {
@@ -268,49 +249,49 @@ export class TorrentsTableComponent implements OnInit {
     const _clearAndClose = () => {
       this.selection.clear();
       this._updateSelectionService();
-    }
+    };
 
     // Depending on the result, we need to do different actions
-    if(result) {
+    if (result) {
       switch (result) {
-        case "cancel":
+        case 'cancel':
           _clearAndClose();
           break;
-        case "delete":
+        case 'delete':
           this.openDeleteTorrentDialog(null, this.selection.selected);
           break;
 
-        case "pause":
-          console.log("pause torrents")
+        case 'pause':
+          console.log('pause torrents');
           this.pauseTorrentsBulk(this.selection.selected);
           _clearAndClose();
           break;
 
-        case "play":
+        case 'play':
           this.resumeTorrentsBulk(this.selection.selected);
           _clearAndClose();
           break;
 
-        case "forceStart":
+        case 'forceStart':
           this.forceStartTorrentsBulk(this.selection.selected);
           _clearAndClose();
-
-        case "increasePrio":
+          break;
+        case 'increasePrio':
           this.increasePriorityBulk(this.selection.selected);
           _clearAndClose();
           break;
 
-        case "decreasePrio":
+        case 'decreasePrio':
           this.decreasePriorityBulk(this.selection.selected);
           _clearAndClose();
           break;
 
-        case "maxPrio":
+        case 'maxPrio':
           this.maximumPriorityBulk(this.selection.selected);
           _clearAndClose();
           break;
 
-        case "minPrio":
+        case 'minPrio':
           this.minimumPriorityBulk(this.selection.selected);
           _clearAndClose();
           break;
@@ -326,38 +307,22 @@ export class TorrentsTableComponent implements OnInit {
     this.ResetAllTableData();   // TODO: Once merging deleted torrent changes are included, this can be removed.
   }
 
-  /**Set interval for getting torrents
-   * @param interval (optional) The interval to set.
-   * If none is given, REFRESH_INTERVAL will be used.
-   */
-  private SetTorrentRefreshInterval(interval?: number): void {
-    this.ClearTorrentRefreshInterval();
-
-    let newInterval = interval || this.DEFAULT_REFRESH_TIMEOUT;
-    this.REFRESH_INTERVAL = setInterval(() => this.getTorrentData(), newInterval);
-  }
-
-  /** Clear interval for getting new torrent data */
-  private ClearTorrentRefreshInterval(): void {
-    if (this.REFRESH_INTERVAL) { clearInterval(this.REFRESH_INTERVAL); }
-  }
-
   onMatSortChange(event: any): void {
     this.currentMatSort = event;
     switch (event.active) {
-      case "Name":
+      case 'Name':
         this.sortTorrentsByName(event.direction);
         break;
-      case "Completed_On":
+      case 'Completed_On':
         this.sortTorrentsByCompletedOn(event.direction);
         break;
-      case "Status":
+      case 'Status':
         this.sortTorrentsByStatus(event.direction);
         break;
-      case "Size":
+      case 'Size':
         this.sortTorrentsBySize(event.direction);
         break;
-      case "ETA":
+      case 'ETA':
         this.sortByETA(event.direction);
         break;
 
@@ -367,47 +332,109 @@ export class TorrentsTableComponent implements OnInit {
     this.refreshDataSource();
   }
 
+  /** Determine if torrent is in a error state */
+  public isTorrentError(tor: Torrent): boolean {
+    const errors = ['error', 'stalledUP', 'stalledDL', 'unknown'];
+    return errors.includes(tor.state);
+  }
+
+  /** Determine if table is loading data or not */
+  isLoading(): boolean {
+    return this.allTorrentData == null;
+  }
+
+  /** Get all torrent data and update the table */
+  private async getTorrentData(): Promise<void> {
+
+    // Don't request if we're already in the middle of one
+    if (this.isFetchingData) {
+      return;
+    }
+
+    this.isFetchingData = true;
+    const data = await this.data_store.GetTorrentData(this.RID);
+
+    // Update state with fresh torrent data
+    this.allTorrentInformation = data;
+    this.allTorrentData = data.torrents;
+    this.filteredTorrentData = data.torrents;
+    this.isFetchingData = false;
+    this.RID += 1;
+
+    // Re-sort data
+    this.onMatSortChange(this.currentMatSort);
+
+    // Filter by any search criteria
+    this.updateTorrentsBasedOnSearchValue();
+  }
+
+  private updateTorrentSearchValue(val: string): void {
+    val = val || '';  // In case null is given
+    this.torrentSearchValue = GetTorrentSearchName(val);
+
+    // User is searching for something
+    this.updateTorrentsBasedOnSearchValue();
+  }
+
+  /**Set interval for getting torrents
+   * @param interval (optional) The interval to set.
+   * If none is given, REFRESH_INTERVAL will be used.
+   */
+  private SetTorrentRefreshInterval(interval?: number): void {
+    this.ClearTorrentRefreshInterval();
+
+    const newInterval = interval || this.DEFAULT_REFRESH_TIMEOUT;
+    this.REFRESH_INTERVAL = setInterval(() => this.getTorrentData(), newInterval);
+  }
+
+  /** Clear interval for getting new torrent data */
+  private ClearTorrentRefreshInterval(): void {
+    if (this.REFRESH_INTERVAL) {
+      clearInterval(this.REFRESH_INTERVAL);
+    }
+  }
+
   private sortTorrentsByName(direction: string): void {
     this.filteredTorrentData.sort((a: Torrent, b: Torrent) => {
-      let res = (a.name === b.name ? 0 : (a.name < b.name ? -1 : 1))
-      if(direction === "desc") { res = res * (-1) }
+      let res = (a.name === b.name ? 0 : (a.name < b.name ? -1 : 1));
+      if (direction === 'desc') {
+        res = res * (-1);
+      }
       return res;
     });
   }
 
   private sortTorrentsByCompletedOn(direction: string): void {
-    this._sortByNumber("completion_on", direction);
+    this._sortByNumber('completion_on', direction);
   }
 
   private sortTorrentsByStatus(direction: string): void {
     this.filteredTorrentData.sort((a: Torrent, b: Torrent) => {
-      let res = (a.state === b.state ? 0 : (a.state < b.state ? -1 : 1))
-      if(direction === "desc") { res = res * (-1) }
+      let res = (a.state === b.state ? 0 : (a.state < b.state ? -1 : 1));
+      if (direction === 'desc') {
+        res = res * (-1);
+      }
       return res;
     });
   }
 
   private sortTorrentsBySize(direction: string): void {
-    this._sortByNumber("size", direction);
+    this._sortByNumber('size', direction);
   }
 
   private sortByETA(direction: string): void {
-    this._sortByNumber("eta", direction);
+    this._sortByNumber('eta', direction);
   }
 
   /** Sort a object's property that is a number */
   private _sortByNumber(field: string, direction: string): void {
     this.filteredTorrentData.sort((a: Torrent, b: Torrent) => {
-      let res = (a[field] === b[field] ? 0 : (a[field] < b[field] ? -1 : 1))
-      if(direction === "desc") { res = res * (-1) }
+      let res = (a[field] === b[field] ? 0 : (a[field] < b[field] ? -1 : 1));
+      if (direction === 'desc') {
+        res = res * (-1);
+      }
       return res;
     });
-  }
-
-  /** Determine if torrent is in a error state */
-  public isTorrentError(tor: Torrent): boolean {
-    let errors = ['error', 'stalledUP', 'stalledDL', 'unknown'];
-    return errors.includes(tor.state);
   }
 
   private refreshDataSource(): void {
@@ -433,11 +460,6 @@ export class TorrentsTableComponent implements OnInit {
     this.data_store.ResetAllData();
     this.ClearTorrentRefreshInterval();
     this.SetTorrentRefreshInterval();
-  }
-
-  /** Determine if table is loading data or not */
-  isLoading(): boolean {
-    return this.allTorrentData == null;
   }
 
 }

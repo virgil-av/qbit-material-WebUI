@@ -1,12 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { MatCard } from '@angular/material/card';
-import { TorrentSearchServiceService } from 'src/app/services/torrent-search-service.service';
-import { TorrentDataStoreService } from 'src/app/services/torrent-management/torrent-data-store.service';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
-import { Torrent } from 'src/utils/Interfaces';
-import { FormControl } from '@angular/forms';
-import { GetTorrentSearchName } from 'src/utils/Helpers';
+import {Component, OnInit} from '@angular/core';
+import {TorrentSearchServiceService} from 'src/app/services/torrent-search-service.service';
+import {TorrentDataStoreService} from 'src/app/services/torrent-management/torrent-data-store.service';
+import {Observable} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
+import {Torrent} from 'src/utils/Interfaces';
+import {FormControl} from '@angular/forms';
+import {GetTorrentSearchName} from 'src/utils/Helpers';
 
 @Component({
   selector: 'app-search-torrents',
@@ -22,21 +21,25 @@ export class SearchTorrentsComponent implements OnInit {
   public myControl = new FormControl();
   private options: string[] = [];
 
-  constructor(private searchService: TorrentSearchServiceService, private data_store: TorrentDataStoreService) { }
+  constructor(private searchService: TorrentSearchServiceService,
+              private data_store: TorrentDataStoreService) {
+  }
 
   ngOnInit(): void {
 
     // Detect any changes to torrrent data & update options accordingly
     this.data_store.GetTorrentDataSubscription().subscribe(res => {
 
-      if(res) { this._updateOptions(res.torrents); }
+      if (res) {
+        this._updateOptions(res.torrents);
+      }
     });
 
     this.filteredOptions = this.myControl.valueChanges
-    .pipe(
-      startWith(''),
-      map(val => this._filter(val))
-    )
+      .pipe(
+        startWith(''),
+        map(val => this._filter(val))
+      );
   }
 
   /** Callback for when user changes search query */
@@ -51,7 +54,7 @@ export class SearchTorrentsComponent implements OnInit {
   }
 
   private _filter(val: string): string[] {
-    let filterValue = GetTorrentSearchName(val);
+    const filterValue = GetTorrentSearchName(val);
     return this.options.filter(option => GetTorrentSearchName(option).includes(filterValue));
   }
 

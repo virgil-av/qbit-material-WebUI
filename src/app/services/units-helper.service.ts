@@ -1,11 +1,12 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UnitsHelperService {
 
-  constructor() { }
+  constructor() {
+  }
 
   /** Get string representation of a file size
    * e.g. 2,560 -> 2.56 KB
@@ -28,71 +29,73 @@ export class UnitsHelperService {
     const TB_s = `${(size / TB).toFixed(DP)} TB`;
     const PB_s = `${(size / PB).toFixed(DP)} PB`;
 
-    if(size < B){
+    if (size < B) {
       return B_s;
     }
-    if(size < KB){
+    if (size < KB) {
       return B_s;
     }
-    if(size < MB){
+    if (size < MB) {
       return KB_s;
     }
-    if(size < GB){
+    if (size < GB) {
       return MB_s;
     }
-    if(size < TB){
+    if (size < TB) {
       return GB_s;
     }
-    if(size < PB) {
+    if (size < PB) {
       return TB_s;
     }
 
-    return "ERROR -- Too large";
+    return 'ERROR -- Too large';
   }
 
   /** Get string representation of a given number of seconds
-  * @param seconds The time elapsed, in seconds.
-  */
+   * @param seconds The time elapsed, in seconds.
+   */
   public GetSecondsString(seconds: number): string {
 
     interface TimeNotation {
-        seconds: number,
-        type: string,
-        exclude_plural: boolean,
-        exclude_space: boolean,
+      seconds: number;
+      type: string;
+      exclude_plural: boolean;
+      exclude_space: boolean;
     }
 
-    const S = {seconds: 1, type: "s", exclude_plural: true, exclude_space: true};
-    const M = {seconds: 60, type: "min", exclude_plural: true};
-    const H = {seconds: 3600, type: "h", exclude_plural: true};
-    const D = {seconds: 86400, type: "day"};
-    const W = {seconds: 604800, type: "week"};
+    const S = {seconds: 1, type: 's', exclude_plural: true, exclude_space: true};
+    const M = {seconds: 60, type: 'min', exclude_plural: true};
+    const H = {seconds: 3600, type: 'h', exclude_plural: true};
+    const D = {seconds: 86400, type: 'day'};
+    const W = {seconds: 604800, type: 'week'};
 
-    let result = "";
-    let time_intervals = [W, D, H, M, S];
+    let result = '';
+    const time_intervals = [W, D, H, M, S];
 
     time_intervals.forEach((elem: TimeNotation) => {
-        let count = 0;
-        while(seconds > elem.seconds) {
-          seconds -= elem.seconds;
-          count += 1;
-        }
-        if(count > 0){
-          result += ` ${count}`
-          result += elem.exclude_space ? `` : ` ` // If we don't want space between number and unit, e.g. "5 min" vs. "5min"
-          result += `${elem.type}`
-          if(count > 1 && !elem.exclude_plural){
-            result += `s,`
+      let count = 0;
+      while (seconds > elem.seconds) {
+        seconds -= elem.seconds;
+        count += 1;
+      }
+      if (count > 0) {
+        result += ` ${count}`;
+        result += elem.exclude_space ? `` : ` `; // If we don't want space between number and unit, e.g. "5 min" vs. "5min"
+        result += `${elem.type}`;
+        if (count > 1 && !elem.exclude_plural) {
+          result += `s,`;
+        } else {
+          if (elem.type === 's') {
           } else {
-            if(elem.type === "s") { } // Don't add comma at the end of something like "3 days, 4 h, 5 min, 5 s"
-            else { result += `,` }
-
+            result += `,`;
           }
 
         }
-    })
 
-    result = result === "" ? "∞" : result;
+      }
+    });
+
+    result = result === '' ? '∞' : result;
 
     return result;
   }
@@ -101,31 +104,31 @@ export class UnitsHelperService {
    * @param timestamp Number of seconds since epoch.
    */
   GetDateString(timestamp: number): string {
-    let date = new Date(timestamp * 1000);
-    let result =
-    `${this.getDay(date)}/${this.getMonth(date)}/${date.getFullYear()},
+    const date = new Date(timestamp * 1000);
+    const result =
+      `${this.getDay(date)}/${this.getMonth(date)}/${date.getFullYear()},
     ${this.getHours(date)}:${this.getMinutes(date)}:${this.getSeconds(date)}`;
 
     return result;
   }
 
   private getDay(date: Date): string {
-    return (date.getDate()) < 10 ? `0${date.getDate()}` : `${date.getDate()}`
+    return (date.getDate()) < 10 ? `0${date.getDate()}` : `${date.getDate()}`;
   }
 
   private getMonth(date: Date): string {
-    return (date.getMonth()+1) < 10 ? `0${date.getMonth()+1}` : `${date.getMonth()+1}`
+    return (date.getMonth() + 1) < 10 ? `0${date.getMonth() + 1}` : `${date.getMonth() + 1}`;
   }
 
   private getSeconds(date: Date): string {
-    return (date.getSeconds()) < 10 ? `0${date.getSeconds()}` : `${date.getSeconds()}`
+    return (date.getSeconds()) < 10 ? `0${date.getSeconds()}` : `${date.getSeconds()}`;
   }
 
   private getMinutes(date: Date): string {
-    return (date.getMinutes()) < 10 ? `0${date.getMinutes()}` : `${date.getMinutes()}`
+    return (date.getMinutes()) < 10 ? `0${date.getMinutes()}` : `${date.getMinutes()}`;
   }
 
   private getHours(date: Date): string {
-    return (date.getHours()) < 10 ? `0${date.getHours()}` : `${date.getHours()}`
+    return (date.getHours()) < 10 ? `0${date.getHours()}` : `${date.getHours()}`;
   }
 }

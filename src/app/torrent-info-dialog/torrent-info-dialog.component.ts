@@ -1,10 +1,10 @@
-import { Component, OnInit, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Torrent } from 'src/utils/Interfaces';
-import { UnitsHelperService } from '../services/units-helper.service';
-import { PrettyPrintTorrentDataService } from '../services/pretty-print-torrent-data.service';
-import { ThemeService } from '../services/theme.service';
-import { Observable } from 'rxjs';
+import {Component, Inject, OnInit} from '@angular/core';
+import {MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {Torrent} from 'src/utils/Interfaces';
+import {UnitsHelperService} from '../services/units-helper.service';
+import {PrettyPrintTorrentDataService} from '../services/pretty-print-torrent-data.service';
+import {ThemeService} from '../services/theme.service';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-torrent-info-dialog',
@@ -16,7 +16,10 @@ export class TorrentInfoDialogComponent implements OnInit {
   public torrent: Torrent = null;
   public isDarkTheme: Observable<boolean>;
 
-  constructor(@Inject(MAT_DIALOG_DATA) data: any, private units_helper: UnitsHelperService, private pp: PrettyPrintTorrentDataService, private theme: ThemeService) { 
+  constructor(@Inject(MAT_DIALOG_DATA) data: any,
+              private units_helper: UnitsHelperService,
+              private pp: PrettyPrintTorrentDataService,
+              private theme: ThemeService) {
     this.torrent = data.torrent;
   }
 
@@ -34,7 +37,7 @@ export class TorrentInfoDialogComponent implements OnInit {
   }
 
   last_activity(): string {
-    return this.pp.pretty_print_completed_on(this.torrent.last_activity)
+    return this.pp.pretty_print_completed_on(this.torrent.last_activity);
   }
 
   total_size(): string {

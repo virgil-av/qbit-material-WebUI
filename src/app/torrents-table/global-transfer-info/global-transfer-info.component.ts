@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { TorrentDataStoreService } from 'src/app/services/torrent-management/torrent-data-store.service';
-import { GlobalTransferInfo, MainData } from 'src/utils/Interfaces';
-import { UnitsHelperService } from 'src/app/services/units-helper.service';
-import { ThemeService } from 'src/app/services/theme.service';
-import { Observable } from 'rxjs';
+import {Component, OnInit} from '@angular/core';
+import {TorrentDataStoreService} from 'src/app/services/torrent-management/torrent-data-store.service';
+import {GlobalTransferInfo, MainData} from 'src/utils/Interfaces';
+import {UnitsHelperService} from 'src/app/services/units-helper.service';
+import {ThemeService} from 'src/app/services/theme.service';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-global-transfer-info',
@@ -15,16 +15,17 @@ export class GlobalTransferInfoComponent implements OnInit {
   public data: GlobalTransferInfo = null;
   public isDarkTheme: Observable<boolean>;
 
-  constructor(private data_store: TorrentDataStoreService, private units_helper: UnitsHelperService, private theme: ThemeService) { }
+  constructor(private data_store: TorrentDataStoreService, private units_helper: UnitsHelperService, private theme: ThemeService) {
+  }
 
   ngOnInit(): void {
     this.isDarkTheme = this.theme.getThemeSubscription();
     // Subscribe to any changes with data store
     this.data_store.GetTorrentDataSubscription().subscribe((res: MainData) => {
-      if(res) {
+      if (res) {
         this.handleDataChange(res.server_state);
       }
-    })
+    });
   }
 
   handleDataChange(newData: GlobalTransferInfo): void {

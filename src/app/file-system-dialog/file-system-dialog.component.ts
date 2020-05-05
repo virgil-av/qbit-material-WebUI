@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { FileDirectoryExplorerService } from '../services/file-system/file-directory-explorer.service';
+import {Component, OnInit} from '@angular/core';
+import {MatDialogRef} from '@angular/material/dialog';
+import {FileDirectoryExplorerService} from '../services/file-system/file-directory-explorer.service';
 import TreeNode from '../services/file-system/TreeNode';
 import * as config from '../../assets/config.json';
-import { ThemeService } from '../services/theme.service';
-import { Observable } from 'rxjs';
+import {ThemeService} from '../services/theme.service';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-file-system-dialog',
@@ -18,22 +18,24 @@ export class FileSystemDialogComponent implements OnInit {
   public rightChildren: TreeNode[] = [];
   public selectedDir: TreeNode = null;               // Keep track of what folder the user last selected (i.e. what folder they're currently in)
   public isDarkTheme: Observable<boolean>;
-  public isCreatingNewFolder: boolean = false;       // Keep track of when user wants to create a new folder
+  public isCreatingNewFolder = false;       // Keep track of when user wants to create a new folder
 
-  private newDirValue: string = ""                   // Name of new folder to create
+  private newDirValue = '';                   // Name of new folder to create
 
-  constructor(private dialogRef:MatDialogRef<FileSystemDialogComponent>, private fs: FileDirectoryExplorerService, private theme: ThemeService) { }
+  constructor(private dialogRef: MatDialogRef<FileSystemDialogComponent>,
+              private fs: FileDirectoryExplorerService, private theme: ThemeService) {
+  }
 
   ngOnInit(): void {
     this.isDarkTheme = this.theme.getThemeSubscription();
-    let root = this.fs.getFileSystem();
+    const root = this.fs.getFileSystem();
     this.leftChildren = root.getChildren();
     this.leftChildren.sort(TreeNode.sort());
   }
 
   public closeDialog(): void {
-    if(this.filePath.length > 0) {
-      let fp = this.filePath.join(config.filePathDelimeter);
+    if (this.filePath.length > 0) {
+      const fp = this.filePath.join(config.filePathDelimeter);
       this.dialogRef.close(fp);
     } else {
       this.dialogRef.close();
@@ -46,21 +48,20 @@ export class FileSystemDialogComponent implements OnInit {
     this.cancelFolderCreation();
 
     // Refresh children shown in right panel
-    if(type === "parent") {
-      if(this.rightChildren) {
+    if (type === 'parent') {
+      if (this.rightChildren) {
         this.filePath.pop();
       }
 
-      let dirChosen = TreeNode.GetChildFromChildrenList(this.leftChildren, dir);
+      const dirChosen = TreeNode.GetChildFromChildrenList(this.leftChildren, dir);
       this.rightChildren = dirChosen.getChildren();
 
       this.rightChildren.sort(TreeNode.sort());
-    }
-    else if(type === "child") {
+    } else if (type === 'child') {
 
       this.leftChildren = this.rightChildren;
 
-      let dirChosen = TreeNode.GetChildFromChildrenList(this.rightChildren, dir);
+      const dirChosen = TreeNode.GetChildFromChildrenList(this.rightChildren, dir);
       this.rightChildren = dirChosen.getChildren();
       this.rightChildren.sort(TreeNode.sort());
     }
@@ -72,10 +73,10 @@ export class FileSystemDialogComponent implements OnInit {
   public navigateUp(): void {
     this.filePath.pop();
 
-    let parent = this.leftChildren[0].getParent();
+    const parent = this.leftChildren[0].getParent();
 
     // If parent is not root, continue
-    if(parent.getParent()) {
+    if (parent.getParent()) {
       this.rightChildren = this.leftChildren;
       this.leftChildren = parent.getParent().getChildren();
 
@@ -92,15 +93,18 @@ export class FileSystemDialogComponent implements OnInit {
 
   /** Create a new folder with given name in current directory */
   public createFolder(): void {
-    let name = this.newDirValue.trim();
+    const name = this.newDirValue.trim();
 
-    if(name === "") {
-      alert("Folder name can't be empty!");
+    if (name === '') {
+      alert('Folder name can\'t be empty!');
       return;
     }
 
-    if (this.selectedDir != null) { this.selectedDir.addChild(name); }
-    else { alert("Can't create a directory at the root!"); }
+    if (this.selectedDir != null) {
+      this.selectedDir.addChild(name);
+    } else {
+      alert('Can\'t create a directory at the root!');
+    }
 
     this.cancelFolderCreation();
     this.rightChildren.sort(TreeNode.sort());
@@ -115,12 +119,14 @@ export class FileSystemDialogComponent implements OnInit {
     this.newDirValue = event.target.value;
 
     // Handle Enter button press
-    if (event.key === "Enter") { this.createFolder(); }
+    if (event.key === 'Enter') {
+      this.createFolder();
+    }
   }
 
   /** Stop user from creating a directory */
   public cancelFolderCreation(): void {
-    this.newDirValue = "";
+    this.newDirValue = '';
     this.isCreatingNewFolder = false;
   }
 
@@ -129,11 +135,11 @@ export class FileSystemDialogComponent implements OnInit {
   }
 
   public getFilePath(): string {
-    return this.filePath.length === 0 ? "{ Unchanged }" : this.filePath.join(config.filePathDelimeter);
+    return this.filePath.length === 0 ? '{ Unchanged }' : this.filePath.join(config.filePathDelimeter);
   }
 
   public isDirectorySelected(dir: TreeNode) {
-    if(this.selectedDir) {
+    if (this.selectedDir) {
       return this.selectedDir.getValue() === dir.getValue();
     }
     return false;
@@ -145,8 +151,8 @@ export class FileSystemDialogComponent implements OnInit {
    * E.g. "1 subfolder", "3 subfolders"
    */
   public getNumChildrenString(dir: TreeNode): string {
-    let len = dir.getChildren().length
-    return len < 1 ? `Empty` : len === 1 ? `1 subfolder` : `${len} subfolders`
+    const len = dir.getChildren().length;
+    return len < 1 ? `Empty` : len === 1 ? `1 subfolder` : `${len} subfolders`;
   }
 
 }
